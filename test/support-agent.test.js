@@ -10,6 +10,17 @@ test("answers delivery questions from the approved shipping policy", () => {
   assert.equal(reply.kind, "knowledge");
   assert.match(reply.message, /3–5 business days/i);
   assert.equal(reply.source.title, "Shipping policy");
+  assert.match(reply.evidence, /3–5 business days/i);
+});
+
+test("answers return questions with a separate approved source", () => {
+  const agent = createSupportAgent();
+
+  const reply = agent.respond({ message: "What is your return window?" });
+
+  assert.equal(reply.kind, "knowledge");
+  assert.equal(reply.source.title, "Returns policy");
+  assert.match(reply.evidence, /30 days/i);
 });
 
 test("requires explicit confirmation before cancelling an order", () => {
@@ -34,5 +45,26 @@ test("escalates suspected fraud without attempting a customer action", () => {
 
   assert.equal(reply.kind, "escalation");
   assert.equal(reply.handoff.reason, "suspected_fraud");
+  assert.equal(reply.handoff.queue, "fraud-review");
   assert.match(reply.handoff.summary, /unrecognized charge/i);
+});
+
+test("explains that shipped orders cannot be cancelled", () => {
+  const agent = createSupportAgent();
+
+  const reply = agent.respond({ message: "Please cancel order ORD-2002" });
+
+  assert.equal(reply.kind, "action_unavailable");
+  assert.match(reply.message, /already shipped/i);
+  assert.equal(reply.handoff.queue, "order-support");
+});
+
+test("escalates unknown questions instead of fabricating a knowledge answer", () => {
+  const agent = createSupportAgent();
+
+  const reply = agent.respond({ message: "Can I change the engraving after purchase?" });
+
+  assert.equal(reply.kind, "escalation");
+  assert.equal(reply.handoff.reason, "knowledge_gap");
+  assert.equal(reply.handoff.queue, "general-support");
 });
