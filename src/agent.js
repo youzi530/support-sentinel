@@ -38,7 +38,21 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
       const text = message.trim();
       // Provider output can advise routing, but local policies remain authoritative for every action.
       const providerIntent = await intentAdapter.classify(text);
-      const plannedTool = /cancel/i.test(text) ? { name: "request_cancellation" } : { name: "search_knowledge" };
+      const deepseek = modelConfig?.provider === "deepseek" ? createDeepSeekAdapter(modelConfig) : null;
+      const proposedOrderId = text.match(orderIdPattern)?.[0]?.toUpperCase() || pendingAction?.orderId;
+      const fallbackPlan = pendingAction && confirmationPattern.test(text)
+        ? { name: "cancel_order", arguments: { orderId: pendingAction.orderId } }
+        : /cancel/i.test(text) && proposedOrderId
+          ? { name: "request_cancellation", arguments: { orderId: proposedOrderId } }
+          : { name: "search_knowledge", arguments: { query: text } };
+      let plannedTool = fallbackPlan;
+      if (deepseek?.isEnabled) {
+        try {
+          plannedTool = (await deepseek.plan({ message: text, pendingAction })) || fallbackPlan;
+        } catch {
+          // A planning failure never prevents the local, policy-controlled route.
+        }
+      }
       const route = (response) => ({ ...response, routing: { mode: intentAdapter.isEnabled ? "provider-assisted" : "deterministic", providerIntent }, trace: [traceProposal(plannedTool, { pendingAction })] });
 
       if (fraudPattern.test(text) || escalationPattern.test(text)) {
@@ -71,7 +85,6 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
 
       const knowledge = findKnowledgeAnswer(text);
       if (knowledge) {
-        const deepseek = modelConfig?.provider === "deepseek" ? createDeepSeekAdapter(modelConfig) : null;
         if (deepseek?.isEnabled) {
           try {
             const generated = await deepseek.answer({ message: text, evidence: knowledge.evidence });

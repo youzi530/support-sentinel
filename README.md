@@ -35,7 +35,7 @@ The model can advise intent classification, but it never receives authority to e
 
 Choose a DeepSeek model in the page’s **Model mode** panel and paste your API key into the masked field. The key exists only in that page’s memory, is sent transiently with each request, and is cleared on refresh or with **Clear**. It is never written to `.env`, local storage, logs, or Git.
 
-The server calls `https://api.deepseek.com/chat/completions` only for a grounded knowledge response, passing the user message and selected approved evidence. Orders and escalation safety remain server-controlled. Invalid keys show a generic connection error without echoing the key. See the [DeepSeek API guide](https://api-docs.deepseek.com/guides/function_calling).
+The server calls `https://api.deepseek.com/chat/completions` first to request one JSON tool proposal and, after local knowledge retrieval, to synthesize a grounded answer from selected evidence. Tool proposals are untrusted: the server validates their allowlisted name and arguments, then retains control of orders, escalation, and confirmation. Invalid keys show a generic connection error without echoing the key. See the [DeepSeek API guide](https://api-docs.deepseek.com/guides/function_calling).
 
 ## Agent loop
 

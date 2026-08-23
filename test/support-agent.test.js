@@ -95,9 +95,30 @@ test("uses only approved evidence in a DeepSeek grounding prompt", async () => {
   assert.match(request.messages[1].content, /3–5 business days/);
 });
 
+test("asks DeepSeek for a structured tool proposal", async () => {
+  let request;
+  const adapter = createDeepSeekAdapter({ apiKey: "secret-key", fetchFn: async (_url, options) => {
+    request = JSON.parse(options.body);
+    return { ok: true, json: async () => ({ choices: [{ message: { content: '{"name":"search_knowledge","arguments":{"query":"shipping"}}' } }] }) };
+  } });
+
+  const proposal = await adapter.plan({ message: "How long does shipping take?" });
+
+  assert.deepEqual(proposal, { name: "search_knowledge", arguments: { query: "shipping" } });
+  assert.deepEqual(request.response_format, { type: "json_object" });
+  assert.match(request.messages[0].content, /cancel_order/i);
+});
+
 test("rejects a model cancellation proposal without customer confirmation", () => {
   const result = validateToolProposal({ name: "cancel_order", arguments: { orderId: "ORD-1001" } }, { pendingAction: null });
 
   assert.equal(result.allowed, false);
   assert.equal(result.reason, "confirmation_required");
+});
+
+test("rejects malformed tool arguments before execution", () => {
+  const result = validateToolProposal({ name: "request_cancellation", arguments: { orderId: "1001" } });
+
+  assert.equal(result.allowed, false);
+  assert.equal(result.reason, "invalid_order_id");
 });
