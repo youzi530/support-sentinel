@@ -31,6 +31,12 @@ npm start
 
 The model can advise intent classification, but it never receives authority to execute an action: evidence retrieval, confirmation checks, and order-tool access remain local server policy. The adapter uses `store: false`; review your organization’s API data controls before using any production customer data. See the official [Responses API quickstart](https://platform.openai.com/docs/quickstart/make-your-first-api-request).
 
+### DeepSeek in the browser demo
+
+Choose a DeepSeek model in the page’s **Model mode** panel and paste your API key into the masked field. The key exists only in that page’s memory, is sent transiently with each request, and is cleared on refresh or with **Clear**. It is never written to `.env`, local storage, logs, or Git.
+
+The server calls `https://api.deepseek.com/chat/completions` only for a grounded knowledge response, passing the user message and selected approved evidence. Orders and escalation safety remain server-controlled. Invalid keys show a generic connection error without echoing the key. See the [DeepSeek API guide](https://api-docs.deepseek.com/guides/function_calling).
+
 ## Suggested 3–5 minute demo
 
 1. Ask **“How long does standard shipping take?”**. Point out the policy answer, source, and visible evidence.

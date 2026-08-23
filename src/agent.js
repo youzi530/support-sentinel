@@ -1,5 +1,6 @@
 import { findKnowledgeAnswer } from "./knowledge-base.js";
 import { createIntentAdapter } from "./intent-adapter.js";
+import { createDeepSeekAdapter } from "./deepseek-adapter.js";
 import { createOrderTool } from "./order-tool.js";
 
 const orderIdPattern = /ORD-\d{4}/i;
@@ -32,7 +33,7 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
 
   return {
     getOrder: orders.getOrder,
-    async respond({ message, pendingAction = null }) {
+    async respond({ message, pendingAction = null, modelConfig = null }) {
       const text = message.trim();
       // Provider output can advise routing, but local policies remain authoritative for every action.
       const providerIntent = await intentAdapter.classify(text);
@@ -67,7 +68,18 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
       }
 
       const knowledge = findKnowledgeAnswer(text);
-      if (knowledge) return route({ kind: "knowledge", ...knowledge });
+      if (knowledge) {
+        const deepseek = modelConfig?.provider === "deepseek" ? createDeepSeekAdapter(modelConfig) : null;
+        if (deepseek?.isEnabled) {
+          try {
+            const generated = await deepseek.answer({ message: text, evidence: knowledge.evidence });
+            return route({ kind: "knowledge", ...knowledge, message: generated, model: { provider: "deepseek", model: modelConfig.model } });
+          } catch {
+            return route({ kind: "provider_error", message: "DeepSeek could not be reached. Your key was not saved; you can continue in deterministic mode." });
+          }
+        }
+        return route({ kind: "knowledge", ...knowledge });
+      }
 
       return route({
         kind: "escalation",

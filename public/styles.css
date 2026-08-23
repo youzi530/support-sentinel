@@ -5,6 +5,7 @@ main { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 72px 0; di
 .eyebrow, small { color: #75e0c0; letter-spacing: .06em; font-size: .72rem; font-weight: 800; }
 h1 { font-size: clamp(2.8rem, 7vw, 5rem); letter-spacing: -.08em; margin: 0 0 18px; } .hero p:not(.eyebrow) { color: #a9bed8; line-height: 1.65; font-size: 1.1rem; }
 .chat-shell { border: 1px solid #29425f; border-radius: 20px; background: #0d1a2b; box-shadow: 0 24px 80px #0008; overflow: hidden; }
+.model-console { display:flex; flex-wrap:wrap; gap:8px; padding:12px 20px; border-bottom:1px solid #29425f; color:#a9bed8; font-size:.78rem; align-items:center; } .model-console input,.model-console select { background:#14253b; color:#ecf5ff; border:1px solid #3a5875; border-radius:7px; padding:7px; } #model-status { color:#75e0c0; font-weight:700; }
 .chat-header { padding: 18px 20px; border-bottom: 1px solid #29425f; display: flex; gap: 9px; align-items: center; font-weight: 700; } .safe { margin-left: auto; color: #75e0c0; font-size: .75rem; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #75e0c0; box-shadow: 0 0 12px #75e0c0; }
 .messages { height: 370px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; } .message { max-width: 86%; border-radius: 14px; padding: 12px 14px; line-height: 1.45; } .agent { background: #172b42; align-self: flex-start; } .customer { background: #3567ff; align-self: flex-end; } small { display: block; margin-top: 8px; line-height: 1.45; white-space: pre-line; }

@@ -18,9 +18,9 @@ const server = createServer(async (request, response) => {
     let raw = "";
     for await (const chunk of request) raw += chunk;
     try {
-      const { message, pendingAction } = JSON.parse(raw);
+      const { message, pendingAction, modelConfig } = JSON.parse(raw);
       if (typeof message !== "string" || !message.trim()) return sendJson(response, 400, { error: "message is required" });
-      return sendJson(response, 200, await agent.respond({ message, pendingAction }));
+      return sendJson(response, 200, await agent.respond({ message, pendingAction, modelConfig }));
     } catch {
       return sendJson(response, 400, { error: "invalid request" });
     }
