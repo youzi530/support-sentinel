@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createSupportAgent } from "../src/agent.js";
 import { createIntentAdapter } from "../src/intent-adapter.js";
 import { createDeepSeekAdapter } from "../src/deepseek-adapter.js";
+import { validateToolProposal } from "../src/tool-registry.js";
 
 test("answers delivery questions from the approved shipping policy", async () => {
   const agent = createSupportAgent();
@@ -92,4 +93,11 @@ test("uses only approved evidence in a DeepSeek grounding prompt", async () => {
   assert.equal(reply, "Shipping takes 3–5 business days.");
   assert.match(request.messages[0].content, /approved evidence/i);
   assert.match(request.messages[1].content, /3–5 business days/);
+});
+
+test("rejects a model cancellation proposal without customer confirmation", () => {
+  const result = validateToolProposal({ name: "cancel_order", arguments: { orderId: "ORD-1001" } }, { pendingAction: null });
+
+  assert.equal(result.allowed, false);
+  assert.equal(result.reason, "confirmation_required");
 });

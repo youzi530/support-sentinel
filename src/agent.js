@@ -1,6 +1,7 @@
 import { findKnowledgeAnswer } from "./knowledge-base.js";
 import { createIntentAdapter } from "./intent-adapter.js";
 import { createDeepSeekAdapter } from "./deepseek-adapter.js";
+import { traceProposal } from "./tool-registry.js";
 import { createOrderTool } from "./order-tool.js";
 
 const orderIdPattern = /ORD-\d{4}/i;
@@ -37,7 +38,8 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
       const text = message.trim();
       // Provider output can advise routing, but local policies remain authoritative for every action.
       const providerIntent = await intentAdapter.classify(text);
-      const route = (response) => ({ ...response, routing: { mode: intentAdapter.isEnabled ? "provider-assisted" : "deterministic", providerIntent } });
+      const plannedTool = /cancel/i.test(text) ? { name: "request_cancellation" } : { name: "search_knowledge" };
+      const route = (response) => ({ ...response, routing: { mode: intentAdapter.isEnabled ? "provider-assisted" : "deterministic", providerIntent }, trace: [traceProposal(plannedTool, { pendingAction })] });
 
       if (fraudPattern.test(text) || escalationPattern.test(text)) {
         const reason = fraudPattern.test(text) ? "suspected_fraud" : "high_customer_frustration";
