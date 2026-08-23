@@ -8,7 +8,7 @@ Provides a safe, reviewable support interaction that answers from approved knowl
 
 ### Requirement: Answer from approved knowledge
 
-The system SHALL answer a supported policy question only from matching approved knowledge and identify the source article with a supporting evidence excerpt.
+The system SHALL answer a supported policy question only from matching approved knowledge, identify the source article with a supporting evidence excerpt, and MAY use a configured model to phrase the response without adding unsupported facts. It SHALL route an unsupported support-related question to a human handoff, except that non-support conversational messages may use the separate safe-general-chat capability.
 
 #### Scenario: Customer asks about delivery timing
 
@@ -16,15 +16,21 @@ The system SHALL answer a supported policy question only from matching approved 
 - **THEN** the agent returns the stated delivery window
 - **AND THEN** the response names the shipping-policy source and evidence excerpt
 
-#### Scenario: No approved evidence is found
+#### Scenario: Customer asks about delivery timing with model mode enabled
 
-- **WHEN** a customer asks a question without a matching approved knowledge article
-- **THEN** the agent does not invent an answer
+- **WHEN** a customer asks how long standard shipping takes while DeepSeek mode is enabled
+- **THEN** the system gives the model the approved shipping evidence
+- **AND THEN** the returned response retains the shipping-policy source and evidence excerpt
+
+#### Scenario: No approved evidence is found for a support question
+
+- **WHEN** a customer asks a support-related question without a matching approved knowledge article
+- **THEN** the agent does not invent a policy answer
 - **AND THEN** prepares a human handoff
 
 ### Requirement: Confirm customer actions before execution
 
-The system SHALL only cancel a processing order after the customer explicitly confirms the requested cancellation, and SHALL report an actionable status when cancellation is unavailable.
+The system SHALL only cancel a processing order after explicit customer confirmation, even when a model proposes the cancellation tool, and SHALL report an actionable status when cancellation is unavailable.
 
 #### Scenario: Customer requests cancellation
 
