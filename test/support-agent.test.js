@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createSupportAgent } from "../src/agent.js";
+import { createIntentAdapter } from "../src/intent-adapter.js";
 
 test("answers delivery questions from the approved shipping policy", () => {
   const agent = createSupportAgent();
@@ -67,4 +68,13 @@ test("escalates unknown questions instead of fabricating a knowledge answer", ()
   assert.equal(reply.kind, "escalation");
   assert.equal(reply.handoff.reason, "knowledge_gap");
   assert.equal(reply.handoff.queue, "general-support");
+});
+
+test("keeps the optional provider adapter disabled without an API key", async () => {
+  const adapter = createIntentAdapter({ apiKey: "" });
+
+  const result = await adapter.classify("How long does shipping take?");
+
+  assert.equal(adapter.isEnabled, false);
+  assert.equal(result, null);
 });
