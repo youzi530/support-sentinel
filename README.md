@@ -45,6 +45,8 @@ The prototype records a compact operational trace for each turn: the proposed ap
 
 ## Suggested 3–5 minute demo
 
+For a ready-to-read 90-second version, see [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
+
 1. Ask **“How long does standard shipping take?”**. Point out the policy answer, source, and visible evidence.
 2. Ask **“Please cancel order ORD-1001”**. Show that the agent requests confirmation rather than acting immediately.
 3. Reply **“Yes, cancel it”**. Show the action receipt.
