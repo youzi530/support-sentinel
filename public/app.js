@@ -30,10 +30,11 @@ async function ask(message) {
   if (!response.ok) return addMessage(reply.error || "Something went wrong.", "agent");
 
   pendingAction = reply.pendingAction || null;
-  const labels = { knowledge: "GROUNDED KNOWLEDGE", confirmation_required: "CONFIRMATION REQUIRED", action_completed: "ACTION COMPLETE", action_unavailable: "ACTION UNAVAILABLE", escalation: "HUMAN HANDOFF", provider_error: "MODEL CONNECTION" };
+  const labels = { knowledge: "GROUNDED KNOWLEDGE", general_chat: "GENERAL MODEL RESPONSE", confirmation_required: "CONFIRMATION REQUIRED", action_completed: "ACTION COMPLETE", action_unavailable: "ACTION UNAVAILABLE", escalation: "HUMAN HANDOFF", provider_error: "MODEL CONNECTION" };
   const details = [];
   if (reply.source) details.push(`Source: ${reply.source.title}`);
   if (reply.evidence) details.push(`Evidence: “${reply.evidence}”`);
+  if (reply.responseMode) details.push(`Mode: ${reply.responseMode}`);
   if (reply.receipt) details.push(`Receipt: ${reply.receipt.action} · ${reply.receipt.orderId}`);
   if (reply.handoff) details.push(`Queue: ${reply.handoff.queue} · Reason: ${reply.handoff.reason} · ${reply.handoff.summary}`);
   if (reply.trace?.length) details.push(`Trace: ${reply.trace.map((item) => `${item.tool} (${item.validation}${item.reason ? `: ${item.reason}` : ""})`).join(", ")}`);

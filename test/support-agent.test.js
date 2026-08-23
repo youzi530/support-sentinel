@@ -122,3 +122,50 @@ test("rejects malformed tool arguments before execution", () => {
   assert.equal(result.allowed, false);
   assert.equal(result.reason, "invalid_order_id");
 });
+
+test("answers a low-risk identity question with the configured model", async (t) => {
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async (_url, options) => {
+    calls += 1;
+    const request = JSON.parse(options.body);
+    assert.match(request.messages[0].content, /Support Sentinel/i);
+    return { ok: true, json: async () => ({ choices: [{ message: { content: "I’m Support Sentinel, a customer-support demo agent." } }] }) };
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const reply = await createSupportAgent().respond({
+    message: "你是谁",
+    modelConfig: { provider: "deepseek", apiKey: "test-key", model: "deepseek-v4-flash" }
+  });
+
+  assert.equal(reply.kind, "general_chat");
+  assert.equal(reply.responseMode, "general-model");
+  assert.equal(calls, 1);
+});
+
+test("uses a deterministic introduction for general chat without a model", async () => {
+  const reply = await createSupportAgent().respond({ message: "Who are you?" });
+
+  assert.equal(reply.kind, "general_chat");
+  assert.equal(reply.responseMode, "deterministic-introduction");
+  assert.match(reply.message, /Support Sentinel/i);
+});
+
+test("keeps an unsupported support request on the human-handoff path with a model configured", async (t) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, options) => {
+    const request = JSON.parse(options.body);
+    assert.deepEqual(request.response_format, { type: "json_object" });
+    return { ok: true, json: async () => ({ choices: [{ message: { content: '{"name":"create_handoff","arguments":{"reason":"knowledge_gap"}}' } }] }) };
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const reply = await createSupportAgent().respond({
+    message: "Can I change the engraving after purchase?",
+    modelConfig: { provider: "deepseek", apiKey: "test-key" }
+  });
+
+  assert.equal(reply.kind, "escalation");
+  assert.equal(reply.handoff.reason, "knowledge_gap");
+});

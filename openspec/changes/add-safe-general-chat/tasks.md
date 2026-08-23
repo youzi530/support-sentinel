@@ -11,4 +11,4 @@
 
 ## 3. Verification
 
-- [ ] 3.1 Run tests and strict OpenSpec validation, commit focused changes, and push to main.
+- [x] 3.1 Run tests and strict OpenSpec validation, commit focused changes, and push to main.

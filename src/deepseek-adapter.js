@@ -39,6 +39,16 @@ export function createDeepSeekAdapter({ apiKey, model = "deepseek-v4-flash", fet
           { role: "system", content: "You are a customer-support agent. Answer only from the approved evidence. Do not mention policies not present in it. Keep the answer concise." },
           { role: "user", content: `Customer message: ${message}\n\nApproved evidence: ${evidence}` }
       ]);
+    },
+    async generalChat({ message }) {
+      if (!apiKey || !fetchFn) return null;
+      return complete([
+        {
+          role: "system",
+          content: "You are Support Sentinel, a customer-support demo agent. Answer this low-risk conversational message concisely and warmly. You may describe your role and capabilities, but do not invent company policies, access customer data, perform actions, or make operational promises. For support questions, invite the customer to ask about an approved policy or order."
+        },
+        { role: "user", content: message }
+      ]);
     }
   };
 }

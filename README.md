@@ -35,7 +35,9 @@ The model can advise intent classification, but it never receives authority to e
 
 Choose a DeepSeek model in the page’s **Model mode** panel and paste your API key into the masked field. The key exists only in that page’s memory, is sent transiently with each request, and is cleared on refresh or with **Clear**. It is never written to `.env`, local storage, logs, or Git.
 
-The server calls `https://api.deepseek.com/chat/completions` first to request one JSON tool proposal and, after local knowledge retrieval, to synthesize a grounded answer from selected evidence. Tool proposals are untrusted: the server validates their allowlisted name and arguments, then retains control of orders, escalation, and confirmation. Invalid keys show a generic connection error without echoing the key. See the [DeepSeek API guide](https://api-docs.deepseek.com/guides/function_calling).
+The server calls `https://api.deepseek.com/chat/completions` to request one JSON tool proposal for a support workflow and, after local knowledge retrieval, to synthesize a grounded answer from selected evidence. It also allows a deliberately narrow set of general conversational messages—such as “Who are you?”—to receive a bounded model response. The visible receipt distinguishes **GENERAL MODEL RESPONSE** from **GROUNDED KNOWLEDGE**.
+
+Tool proposals are untrusted: the server validates their allowlisted name and arguments, then retains control of orders, escalation, and confirmation. A general response cannot assert policy, access customer data, perform actions, or make operational promises. Any unsupported support question still receives a human handoff. Invalid keys show a generic connection error without echoing the key. See the [DeepSeek API guide](https://api-docs.deepseek.com/guides/function_calling).
 
 ## Agent loop
 
@@ -49,6 +51,7 @@ The prototype records a compact operational trace for each turn: the proposed ap
 4. Try **“Please cancel order ORD-2002”**. Show the explicit shipped-order result and `order-support` handoff rather than a misleading fallback.
 5. Click **“Report fraud”**. Point out the `suspected_fraud` handoff to `fraud-review` and that no payment action is offered.
 6. Briefly tour `src/agent.js`, `src/intent-adapter.js`, and the test suite to show the LLM advisory boundary, server-owned tools, and TDD coverage.
+7. With a DeepSeek key configured, ask **“Who are you?”**. Show the **GENERAL MODEL RESPONSE** label; then ask an unsupported support question to show it still escalates.
 
 ### Recording runbook
 
@@ -70,7 +73,7 @@ openspec/            # change proposal, spec, design, and tracked tasks
 
 ## Design choices and trade-offs
 
-- **Provider-assisted, policy-enforced.** A configured model can classify intent, but retrieval, confirmation, and tool authorization remain deterministic. This keeps local demos reproducible and prevents an LLM from inventing policy or executing customer actions.
+- **Provider-assisted, policy-enforced.** A configured model can plan approved support tools, synthesize grounded answers, and answer a narrowly recognized conversational prompt. Retrieval, confirmation, tool authorization, and support escalation remain deterministic. This keeps the demo natural without letting an LLM invent policy or execute customer actions.
 - **Actions are isolated and confirmation-gated.** `order-tool.js` only supports cancellation for a processing demo order. In production this boundary would add authenticated identity, explicit authorization, idempotency, audit logs, and a real order-service adapter.
 - **Escalation is a first-class result.** The UI displays the handoff reason and a summary a human can pick up; production would create a ticket and attach relevant conversation context.
 - **In-memory state is demo-only.** Restarting the server resets fixture data.

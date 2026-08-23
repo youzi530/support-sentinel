@@ -8,6 +8,7 @@ const orderIdPattern = /ORD-\d{4}/i;
 const confirmationPattern = /^(yes|confirm|please do|cancel it)\b/i;
 const fraudPattern = /unrecognized charge|fraud|stolen card|card.*(?:wasn't|was not) me/i;
 const escalationPattern = /angry|terrible|manager|lawsuit/i;
+const generalConversationPattern = /^(?:hi|hello|hey|你好|您好|你是谁|你是誰|who are you|what can you do|你能做什么|你能做什麼|你可以做什么|你可以做什麼|谢谢|謝謝|thanks|thank you)[!！?？,.，。\s]*$/i;
 
 function handoff(reason, summary, queue) {
   return { reason, summary, queue };
@@ -29,6 +30,10 @@ function unavailableCancellation(orderId, order) {
   };
 }
 
+function isGeneralConversation(text) {
+  return generalConversationPattern.test(text);
+}
+
 export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {}) {
   const orders = createOrderTool();
 
@@ -46,7 +51,11 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
           ? { name: "request_cancellation", arguments: { orderId: proposedOrderId } }
           : { name: "search_knowledge", arguments: { query: text } };
       let plannedTool = fallbackPlan;
-      if (deepseek?.isEnabled) {
+      let toolPlanningComplete = false;
+      async function planSupportTool() {
+        if (toolPlanningComplete) return;
+        toolPlanningComplete = true;
+        if (!deepseek?.isEnabled) return;
         try {
           plannedTool = (await deepseek.plan({ message: text, pendingAction })) || fallbackPlan;
         } catch {
@@ -85,6 +94,7 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
 
       const knowledge = findKnowledgeAnswer(text);
       if (knowledge) {
+        await planSupportTool();
         if (deepseek?.isEnabled) {
           try {
             const generated = await deepseek.answer({ message: text, evidence: knowledge.evidence });
@@ -96,6 +106,23 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
         return route({ kind: "knowledge", ...knowledge });
       }
 
+      if (isGeneralConversation(text)) {
+        if (deepseek?.isEnabled) {
+          try {
+            const generated = await deepseek.generalChat({ message: text });
+            return route({ kind: "general_chat", responseMode: "general-model", message: generated, model: { provider: "deepseek", model: modelConfig.model } });
+          } catch {
+            return route({ kind: "provider_error", message: "DeepSeek could not be reached. Your key was not saved; you can continue in deterministic mode." });
+          }
+        }
+        return route({
+          kind: "general_chat",
+          responseMode: "deterministic-introduction",
+          message: "I’m Support Sentinel, a customer-support demo agent. I can answer approved policy questions, safely cancel an eligible order after confirmation, and route sensitive cases to a human specialist."
+        });
+      }
+
+      await planSupportTool();
       return route({
         kind: "escalation",
         message: "I don’t have a reliable answer for that. I’ve prepared a handoff to our support team.",
