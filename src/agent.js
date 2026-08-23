@@ -6,6 +6,26 @@ const confirmationPattern = /^(yes|confirm|please do|cancel it)\b/i;
 const fraudPattern = /unrecognized charge|fraud|stolen card|card.*(?:wasn't|was not) me/i;
 const escalationPattern = /angry|terrible|manager|lawsuit/i;
 
+function handoff(reason, summary, queue) {
+  return { reason, summary, queue };
+}
+
+function unavailableCancellation(orderId, order) {
+  if (!order) {
+    return {
+      kind: "action_unavailable",
+      message: `I can’t find order ${orderId}, so I haven’t made any changes.`,
+      handoff: handoff("order_not_found", `Customer requested cancellation for unknown order ${orderId}.`, "order-support")
+    };
+  }
+  const description = order.status === "shipped" ? "has already shipped" : "has already been cancelled";
+  return {
+    kind: "action_unavailable",
+    message: `Order ${orderId} ${description}, so it can’t be cancelled automatically. I’ve prepared a support handoff.`,
+    handoff: handoff("action_not_available", `Cancellation unavailable for ${orderId}: status is ${order.status}.`, "order-support")
+  };
+}
+
 export function createSupportAgent() {
   const orders = createOrderTool();
 
@@ -19,18 +39,14 @@ export function createSupportAgent() {
         return {
           kind: "escalation",
           message: "I’m connecting you with a specialist who can help securely.",
-          handoff: { reason, summary: `Customer reported: ${text}` }
+          handoff: handoff(reason, `Customer reported: ${text}`, reason === "suspected_fraud" ? "fraud-review" : "priority-support")
         };
       }
 
       if (pendingAction && confirmationPattern.test(text)) {
         const receipt = orders.cancelOrder(pendingAction.orderId);
         if (receipt) return { kind: "action_completed", message: receipt.message, receipt };
-        return {
-          kind: "escalation",
-          message: "This order can no longer be cancelled automatically, so I’ve prepared a handoff.",
-          handoff: { reason: "action_not_available", summary: `Cancellation unavailable for ${pendingAction.orderId}.` }
-        };
+        return unavailableCancellation(pendingAction.orderId, orders.getOrder(pendingAction.orderId));
       }
 
       const orderId = text.match(orderIdPattern)?.[0]?.toUpperCase();
@@ -43,6 +59,7 @@ export function createSupportAgent() {
             pendingAction: { type: "cancel_order", orderId }
           };
         }
+        return unavailableCancellation(orderId, order);
       }
 
       const knowledge = findKnowledgeAnswer(text);
@@ -51,7 +68,7 @@ export function createSupportAgent() {
       return {
         kind: "escalation",
         message: "I don’t have a reliable answer for that. I’ve prepared a handoff to our support team.",
-        handoff: { reason: "knowledge_gap", summary: `Customer needs help with: ${text}` }
+        handoff: handoff("knowledge_gap", `Customer needs help with: ${text}`, "general-support")
       };
     }
   };
