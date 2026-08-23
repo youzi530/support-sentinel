@@ -1,4 +1,5 @@
 import { findKnowledgeAnswer } from "./knowledge-base.js";
+import { createIntentAdapter } from "./intent-adapter.js";
 import { createOrderTool } from "./order-tool.js";
 
 const orderIdPattern = /ORD-\d{4}/i;
@@ -26,50 +27,53 @@ function unavailableCancellation(orderId, order) {
   };
 }
 
-export function createSupportAgent() {
+export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {}) {
   const orders = createOrderTool();
 
   return {
     getOrder: orders.getOrder,
-    respond({ message, pendingAction = null }) {
+    async respond({ message, pendingAction = null }) {
       const text = message.trim();
+      // Provider output can advise routing, but local policies remain authoritative for every action.
+      const providerIntent = await intentAdapter.classify(text);
+      const route = (response) => ({ ...response, routing: { mode: intentAdapter.isEnabled ? "provider-assisted" : "deterministic", providerIntent } });
 
       if (fraudPattern.test(text) || escalationPattern.test(text)) {
         const reason = fraudPattern.test(text) ? "suspected_fraud" : "high_customer_frustration";
-        return {
+        return route({
           kind: "escalation",
           message: "I’m connecting you with a specialist who can help securely.",
           handoff: handoff(reason, `Customer reported: ${text}`, reason === "suspected_fraud" ? "fraud-review" : "priority-support")
-        };
+        });
       }
 
       if (pendingAction && confirmationPattern.test(text)) {
         const receipt = orders.cancelOrder(pendingAction.orderId);
-        if (receipt) return { kind: "action_completed", message: receipt.message, receipt };
-        return unavailableCancellation(pendingAction.orderId, orders.getOrder(pendingAction.orderId));
+        if (receipt) return route({ kind: "action_completed", message: receipt.message, receipt });
+        return route(unavailableCancellation(pendingAction.orderId, orders.getOrder(pendingAction.orderId)));
       }
 
       const orderId = text.match(orderIdPattern)?.[0]?.toUpperCase();
       if (orderId && /cancel/i.test(text)) {
         const order = orders.getOrder(orderId);
         if (order?.status === "processing") {
-          return {
+          return route({
             kind: "confirmation_required",
             message: `I can cancel ${orderId} (${order.item}, ${order.total}). Reply “Yes” to confirm.`,
             pendingAction: { type: "cancel_order", orderId }
-          };
+          });
         }
-        return unavailableCancellation(orderId, order);
+        return route(unavailableCancellation(orderId, order));
       }
 
       const knowledge = findKnowledgeAnswer(text);
-      if (knowledge) return { kind: "knowledge", ...knowledge };
+      if (knowledge) return route({ kind: "knowledge", ...knowledge });
 
-      return {
+      return route({
         kind: "escalation",
         message: "I don’t have a reliable answer for that. I’ve prepared a handoff to our support team.",
         handoff: handoff("knowledge_gap", `Customer needs help with: ${text}`, "general-support")
-      };
+      });
     }
   };
 }

@@ -6,7 +6,14 @@ let pendingAction = null;
 function addMessage(text, role, detail = "") {
   const message = document.createElement("article");
   message.className = `message ${role}`;
-  message.innerHTML = `<div>${text}</div>${detail ? `<small>${detail}</small>` : ""}`;
+  const body = document.createElement("div");
+  body.textContent = text;
+  message.append(body);
+  if (detail) {
+    const metadata = document.createElement("small");
+    metadata.textContent = detail;
+    message.append(metadata);
+  }
   messages.append(message);
   messages.scrollTop = messages.scrollHeight;
 }
@@ -19,8 +26,13 @@ async function ask(message) {
   if (!response.ok) return addMessage(reply.error || "Something went wrong.", "agent");
 
   pendingAction = reply.pendingAction || null;
-  const labels = { knowledge: "APPROVED KNOWLEDGE", confirmation_required: "CONFIRMATION REQUIRED", action_completed: "ACTION COMPLETE", escalation: "HUMAN HANDOFF" };
-  const detail = reply.source ? `Source: ${reply.source.title}` : reply.handoff ? `Reason: ${reply.handoff.reason} · ${reply.handoff.summary}` : reply.receipt ? `Receipt: ${reply.receipt.action} · ${reply.receipt.orderId}` : "";
+  const labels = { knowledge: "GROUNDED KNOWLEDGE", confirmation_required: "CONFIRMATION REQUIRED", action_completed: "ACTION COMPLETE", action_unavailable: "ACTION UNAVAILABLE", escalation: "HUMAN HANDOFF" };
+  const details = [];
+  if (reply.source) details.push(`Source: ${reply.source.title}`);
+  if (reply.evidence) details.push(`Evidence: “${reply.evidence}”`);
+  if (reply.receipt) details.push(`Receipt: ${reply.receipt.action} · ${reply.receipt.orderId}`);
+  if (reply.handoff) details.push(`Queue: ${reply.handoff.queue} · Reason: ${reply.handoff.reason} · ${reply.handoff.summary}`);
+  const detail = details.join("\n");
   addMessage(reply.message, "agent", `${labels[reply.kind]}${detail ? ` · ${detail}` : ""}`);
 }
 

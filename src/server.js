@@ -20,7 +20,7 @@ const server = createServer(async (request, response) => {
     try {
       const { message, pendingAction } = JSON.parse(raw);
       if (typeof message !== "string" || !message.trim()) return sendJson(response, 400, { error: "message is required" });
-      return sendJson(response, 200, agent.respond({ message, pendingAction }));
+      return sendJson(response, 200, await agent.respond({ message, pendingAction }));
     } catch {
       return sendJson(response, 400, { error: "invalid request" });
     }

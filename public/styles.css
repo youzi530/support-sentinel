@@ -2,12 +2,12 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 18% 0%, #183765, transparent 42%), #08111f; }
 main { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 72px 0; display: grid; grid-template-columns: .85fr 1.15fr; gap: 72px; align-items: center; }
-.eyebrow, small { color: #75e0c0; letter-spacing: .09em; font-size: .72rem; font-weight: 800; }
+.eyebrow, small { color: #75e0c0; letter-spacing: .06em; font-size: .72rem; font-weight: 800; }
 h1 { font-size: clamp(2.8rem, 7vw, 5rem); letter-spacing: -.08em; margin: 0 0 18px; } .hero p:not(.eyebrow) { color: #a9bed8; line-height: 1.65; font-size: 1.1rem; }
 .chat-shell { border: 1px solid #29425f; border-radius: 20px; background: #0d1a2b; box-shadow: 0 24px 80px #0008; overflow: hidden; }
 .chat-header { padding: 18px 20px; border-bottom: 1px solid #29425f; display: flex; gap: 9px; align-items: center; font-weight: 700; } .safe { margin-left: auto; color: #75e0c0; font-size: .75rem; }
 .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #75e0c0; box-shadow: 0 0 12px #75e0c0; }
-.messages { height: 370px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; } .message { max-width: 86%; border-radius: 14px; padding: 12px 14px; line-height: 1.45; } .agent { background: #172b42; align-self: flex-start; } .customer { background: #3567ff; align-self: flex-end; } small { display: block; margin-top: 8px; line-height: 1.4; }
+.messages { height: 370px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 13px; } .message { max-width: 86%; border-radius: 14px; padding: 12px 14px; line-height: 1.45; } .agent { background: #172b42; align-self: flex-start; } .customer { background: #3567ff; align-self: flex-end; } small { display: block; margin-top: 8px; line-height: 1.45; white-space: pre-line; }
 .suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 16px; } button { border: 1px solid #3a5875; color: #c9ddf0; background: transparent; border-radius: 99px; padding: 8px 10px; cursor: pointer; } button:hover { border-color: #75e0c0; color: #75e0c0; }
 form { border-top: 1px solid #29425f; display: flex; padding: 12px; gap: 8px; } input { min-width: 0; flex: 1; border: 0; border-radius: 9px; padding: 12px; color: #eef7ff; background: #14253b; font: inherit; } form button { background: #75e0c0; color: #08201e; border: 0; font-weight: 800; padding: 0 18px; }
 @media (max-width: 720px) { main { padding: 44px 0; display: block; } .hero { margin-bottom: 34px; } }
