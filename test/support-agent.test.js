@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createSupportAgent } from "../src/agent.js";
 import { createIntentAdapter } from "../src/intent-adapter.js";
+import { createDeepSeekAdapter } from "../src/deepseek-adapter.js";
 
 test("answers delivery questions from the approved shipping policy", async () => {
   const agent = createSupportAgent();
@@ -77,4 +78,18 @@ test("keeps the optional provider adapter disabled without an API key", async ()
 
   assert.equal(adapter.isEnabled, false);
   assert.equal(result, null);
+});
+
+test("uses only approved evidence in a DeepSeek grounding prompt", async () => {
+  let request;
+  const adapter = createDeepSeekAdapter({ apiKey: "secret-key", fetchFn: async (_url, options) => {
+    request = JSON.parse(options.body);
+    return { ok: true, json: async () => ({ choices: [{ message: { content: "Shipping takes 3–5 business days." } }] }) };
+  } });
+
+  const reply = await adapter.answer({ message: "When will it arrive?", evidence: "Standard shipping arrives in 3–5 business days." });
+
+  assert.equal(reply, "Shipping takes 3–5 business days.");
+  assert.match(request.messages[0].content, /approved evidence/i);
+  assert.match(request.messages[1].content, /3–5 business days/);
 });
