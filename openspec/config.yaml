@@ -1,5 +1,10 @@
 schema: spec-driven
 
+context: |
+  Tech stack: Node.js built-ins and browser-native JavaScript; no external runtime dependencies.
+  Product: an interview-ready AI customer-support agent prototype.
+  Quality: follow TDD with `node --test`, keep commits focused, and never expose customer data beyond the demo fixture.
+
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
