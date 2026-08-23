@@ -18,12 +18,12 @@ The agent currently invokes DeepSeek to propose a support tool and to synthesize
 ## Decisions
 
 1. Add an explicit `general_chat` provider method and use it only after local risk, action, and approved-knowledge routes have been evaluated. This prevents an ambiguous request from using open-ended generation where a support guardrail applies.
-2. Classify short conversational messages locally with a narrow predicate (identity, capabilities, greeting, thanks). All other unsupported support-style messages retain the current human handoff. This is safer than asking the model to self-classify its own authority boundary.
+2. Classify support-topic signals locally (orders, delivery, returns, payments, accounts, and policy language). Any other non-empty message can use the general-chat model path when configured; support-style messages retain the current controlled route. This keeps broad conversation useful without asking the model to self-classify its authority boundary.
 3. Return `kind: "general_chat"` plus a `responseMode` label. The UI can display a clear “General model response” receipt, while API consumers retain an explicit contract.
 4. Use a bounded system prompt that describes the demo identity and prohibits invented policy, account access, or operational commitments. The alternative of a general assistant prompt was rejected because it would blur the safety boundary.
 
 ## Risks / Trade-offs
 
-- [A conversational request can resemble support] → The predicate is intentionally narrow; unclear support requests escalate rather than generate.
+- [A conversational request can resemble support] → The support-topic detector is conservative; matching requests retain the controlled support route rather than general generation.
 - [Model failure] → Preserve deterministic no-model fallback and return the existing generic provider error without echoing credentials.
 - [Model statement could still be mistaken for policy] → UI labels general output separately and prompt prohibits policy claims.

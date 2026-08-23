@@ -1,8 +1,8 @@
 ## 1. Model and routing contract
 
-- [x] 1.1 Add failing tests for model-backed general chat, deterministic no-model fallback, and unsupported-support escalation.
+- [x] 1.1 Add failing tests for broad model-backed general chat, deterministic no-model fallback, and unsupported-support escalation.
 - [x] 1.2 Add a bounded DeepSeek general-chat adapter method that never receives policy evidence or tool authority.
-- [x] 1.3 Route only recognized low-risk conversation to general chat after existing risk, action, and knowledge checks.
+- [x] 1.3 Route non-support conversation to general chat after existing risk, action, knowledge, and support-topic checks.
 
 ## 2. Demo transparency
 

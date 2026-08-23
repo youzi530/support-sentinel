@@ -35,7 +35,7 @@ The model can advise intent classification, but it never receives authority to e
 
 Choose a DeepSeek model in the page’s **Model mode** panel and paste your API key into the masked field. The key exists only in that page’s memory, is sent transiently with each request, and is cleared on refresh or with **Clear**. It is never written to `.env`, local storage, logs, or Git.
 
-The server calls `https://api.deepseek.com/chat/completions` to request one JSON tool proposal for a support workflow and, after local knowledge retrieval, to synthesize a grounded answer from selected evidence. It also allows a deliberately narrow set of general conversational messages—such as “Who are you?”—to receive a bounded model response. The visible receipt distinguishes **GENERAL MODEL RESPONSE** from **GROUNDED KNOWLEDGE**.
+The server calls `https://api.deepseek.com/chat/completions` to request one JSON tool proposal for a support workflow and, after local knowledge retrieval, to synthesize a grounded answer from selected evidence. With a configured key, it also allows broad non-support conversation—such as “Explain binary search”—to receive a bounded model response. The visible receipt distinguishes **GENERAL MODEL RESPONSE** from **GROUNDED KNOWLEDGE**.
 
 Tool proposals are untrusted: the server validates their allowlisted name and arguments, then retains control of orders, escalation, and confirmation. A general response cannot assert policy, access customer data, perform actions, or make operational promises. Any unsupported support question still receives a human handoff. Invalid keys show a generic connection error without echoing the key. See the [DeepSeek API guide](https://api-docs.deepseek.com/guides/function_calling).
 

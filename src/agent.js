@@ -9,6 +9,7 @@ const confirmationPattern = /^(yes|confirm|please do|cancel it)\b/i;
 const fraudPattern = /unrecognized charge|fraud|stolen card|card.*(?:wasn't|was not) me/i;
 const escalationPattern = /angry|terrible|manager|lawsuit/i;
 const generalConversationPattern = /^(?:hi|hello|hey|你好|您好|你是谁|你是誰|who are you|what can you do|你能做什么|你能做什麼|你可以做什么|你可以做什麼|谢谢|謝謝|thanks|thank you)[!！?？,.，。\s]*$/i;
+const supportTopicPattern = /\b(?:order|cancel|shipping|delivery|return|refund|policy|purchase|charge|card|payment|account|invoice|address|support)\b|订单|取消|配送|物流|退款|退货|政策|购买|付款|支付|账户|发票|地址|客服/i;
 
 function handoff(reason, summary, queue) {
   return { reason, summary, queue };
@@ -32,6 +33,10 @@ function unavailableCancellation(orderId, order) {
 
 function isGeneralConversation(text) {
   return generalConversationPattern.test(text);
+}
+
+function isNonSupportConversation(text) {
+  return Boolean(text) && !supportTopicPattern.test(text);
 }
 
 export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {}) {
@@ -106,15 +111,16 @@ export function createSupportAgent({ intentAdapter = createIntentAdapter() } = {
         return route({ kind: "knowledge", ...knowledge });
       }
 
-      if (isGeneralConversation(text)) {
-        if (deepseek?.isEnabled) {
-          try {
-            const generated = await deepseek.generalChat({ message: text });
-            return route({ kind: "general_chat", responseMode: "general-model", message: generated, model: { provider: "deepseek", model: modelConfig.model } });
-          } catch {
-            return route({ kind: "provider_error", message: "DeepSeek could not be reached. Your key was not saved; you can continue in deterministic mode." });
-          }
+      if (isNonSupportConversation(text) && deepseek?.isEnabled) {
+        try {
+          const generated = await deepseek.generalChat({ message: text });
+          return route({ kind: "general_chat", responseMode: "general-model", message: generated, model: { provider: "deepseek", model: modelConfig.model } });
+        } catch {
+          return route({ kind: "provider_error", message: "DeepSeek could not be reached. Your key was not saved; you can continue in deterministic mode." });
         }
+      }
+
+      if (isGeneralConversation(text)) {
         return route({
           kind: "general_chat",
           responseMode: "deterministic-introduction",

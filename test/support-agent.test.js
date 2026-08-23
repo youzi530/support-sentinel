@@ -152,6 +152,25 @@ test("uses a deterministic introduction for general chat without a model", async
   assert.match(reply.message, /Support Sentinel/i);
 });
 
+test("answers an arbitrary non-support conversation with the configured model", async (t) => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, options) => {
+    const request = JSON.parse(options.body);
+    assert.match(request.messages[1].content, /binary search/i);
+    return { ok: true, json: async () => ({ choices: [{ message: { content: "Binary search repeatedly halves a sorted search space." } }] }) };
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const reply = await createSupportAgent().respond({
+    message: "Explain binary search",
+    modelConfig: { provider: "deepseek", apiKey: "test-key" }
+  });
+
+  assert.equal(reply.kind, "general_chat");
+  assert.equal(reply.responseMode, "general-model");
+  assert.match(reply.message, /halves/i);
+});
+
 test("keeps an unsupported support request on the human-handoff path with a model configured", async (t) => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (_url, options) => {

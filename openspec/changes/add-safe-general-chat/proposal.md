@@ -4,7 +4,7 @@ The prototype currently escalates every message that is not an approved support-
 
 ## What Changes
 
-- Add a model-backed general-chat response path for non-support conversational messages when a configured DeepSeek model is available.
+- Add a model-backed general-chat response path for broad non-support conversation when a configured DeepSeek model is available.
 - Identify the response mode in the API and UI so reviewers can distinguish general model output from approved knowledge answers.
 - Preserve deterministic knowledge grounding, action confirmation, tool validation, and risk escalation for support workflows.
 - Retain the existing safe fallback when no model is configured or the provider fails.
