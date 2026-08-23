@@ -12,4 +12,4 @@
 ## 3. Verification and delivery
 
 - [x] 3.1 Update README with DeepSeek setup, privacy boundary, and real-model demo steps; verify no key is present in tracked files.
-- [ ] 3.2 Run tests and OpenSpec validation, commit focused changes, and push to GitHub; verify `main` matches `origin/main`.
+- [x] 3.2 Run tests and OpenSpec validation, commit focused changes, and push to GitHub; verify `main` matches `origin/main`.
