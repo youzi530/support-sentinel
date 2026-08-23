@@ -36,6 +36,7 @@ async function ask(message) {
   if (reply.evidence) details.push(`Evidence: “${reply.evidence}”`);
   if (reply.receipt) details.push(`Receipt: ${reply.receipt.action} · ${reply.receipt.orderId}`);
   if (reply.handoff) details.push(`Queue: ${reply.handoff.queue} · Reason: ${reply.handoff.reason} · ${reply.handoff.summary}`);
+  if (reply.trace?.length) details.push(`Trace: ${reply.trace.map((item) => `${item.tool} (${item.validation}${item.reason ? `: ${item.reason}` : ""})`).join(", ")}`);
   const detail = details.join("\n");
   addMessage(reply.message, "agent", `${labels[reply.kind]}${detail ? ` · ${detail}` : ""}`);
 }

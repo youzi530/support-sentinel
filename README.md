@@ -37,6 +37,10 @@ Choose a DeepSeek model in the page’s **Model mode** panel and paste your API 
 
 The server calls `https://api.deepseek.com/chat/completions` only for a grounded knowledge response, passing the user message and selected approved evidence. Orders and escalation safety remain server-controlled. Invalid keys show a generic connection error without echoing the key. See the [DeepSeek API guide](https://api-docs.deepseek.com/guides/function_calling).
 
+## Agent loop
+
+The prototype records a compact operational trace for each turn: the proposed approved tool and whether server policy allowed it. This is deliberately not hidden model reasoning. Model suggestions are untrusted; the server controls tool allowlists, arguments, order state, and the cancellation confirmation gate.
+
 ## Suggested 3–5 minute demo
 
 1. Ask **“How long does standard shipping take?”**. Point out the policy answer, source, and visible evidence.
