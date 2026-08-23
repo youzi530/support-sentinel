@@ -12,4 +12,4 @@
 ## 3. Verification and delivery
 
 - [x] 3.1 Run the full test suite and OpenSpec validation; verify all commands exit successfully.
-- [ ] 3.2 Commit the focused changes and push the enhanced prototype to GitHub; verify `main` matches `origin/main`.
+- [x] 3.2 Commit the focused changes and push the enhanced prototype to GitHub; verify `main` matches `origin/main`.
